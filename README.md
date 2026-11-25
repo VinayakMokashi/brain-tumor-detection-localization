@@ -156,7 +156,7 @@ notebook.
 
 The notebook was built on Colab with a free GPU. Just open it and run:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/VinayakMokashi/AI-Powered-Brain-Tumor-Detection-and-Localization/blob/main/Brain_Tumor.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/VinayakMokashi/brain-tumor-detection-localization/blob/main/Brain_Tumor.ipynb)
 
 1. Open the badge above (Runtime → Change runtime type → **GPU**).
 2. Download the [LGG MRI dataset](https://www.kaggle.com/mateuszbuda/lgg-mri-segmentation)
@@ -168,8 +168,8 @@ The notebook was built on Colab with a free GPU. Just open it and run:
 
 ```bash
 # 1. Clone
-git clone https://github.com/VinayakMokashi/AI-Powered-Brain-Tumor-Detection-and-Localization.git
-cd AI-Powered-Brain-Tumor-Detection-and-Localization
+git clone https://github.com/VinayakMokashi/brain-tumor-detection-localization.git
+cd brain-tumor-detection-localization
 
 # 2. Create an environment and install dependencies
 python -m venv .venv
@@ -205,7 +205,7 @@ python train.py --data-dir /path/to/Brain_MRI
 ```
 
 **2. Use pre-trained weights (optional).** If you host your trained weights on a
-[GitHub Release](https://github.com/VinayakMokashi/AI-Powered-Brain-Tumor-Detection-and-Localization/releases)
+[GitHub Release](https://github.com/VinayakMokashi/brain-tumor-detection-localization/releases)
 or Google Drive, drop the four files into the dataset folder and jump straight to
 the evaluation cells. *(No pre-trained weights are published yet — use `train.py`
 above to generate them.)*
