@@ -1,5 +1,5 @@
 # Core deep learning stack
-# The models were built and trained with TensorFlow 2.11 (Keras bundled).
+# Pinned to TensorFlow 2.11 (Keras bundled).
 tensorflow==2.11.0
 Keras-Preprocessing==1.1.2
 

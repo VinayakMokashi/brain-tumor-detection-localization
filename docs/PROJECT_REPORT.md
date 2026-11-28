@@ -1,7 +1,10 @@
 # Brain Tumor Detection & Localization — Technical Report
 
 *A layered deep-learning pipeline for classifying and segmenting brain tumors
-in MRI scans.*
+in MRI slices. This is a course project: it follows the brain tumor case study
+("AI in Healthcare") by Dr. Ryan Ahmed in the Udemy course Modern Artificial
+Intelligence Masterclass: Build 6 Projects, and the results below come from the
+pre-trained weights that came with the course.*
 
 ---
 
@@ -15,8 +18,8 @@ scan:
 2. **Localization** — *where* exactly is it, down to the pixel?
 
 A single classifier answers only the first. A single segmentation network can
-answer the second but wastes compute on the ~65% of scans that are healthy and
-is harder to train reliably on imbalanced data. This project therefore uses a
+answer the second but wastes compute on the ~65% of slices that show no tumor
+and is harder to train reliably on imbalanced data. This project therefore uses a
 **two-stage cascade**: a fast classifier screens every scan, and only the
 scans it flags as positive are passed to a heavier segmentation model.
 
@@ -25,12 +28,13 @@ scans it flags as positive are passed to a heavier segmentation model.
 The project uses the **LGG (Lower-Grade Glioma) MRI Segmentation** dataset
 originally published on Kaggle
 ([mateuszbuda/lgg-mri-segmentation](https://www.kaggle.com/mateuszbuda/lgg-mri-segmentation)).
-It contains FLAIR MRI scans from TCGA patients, each paired with a
-hand-annotated binary mask marking the tumor region.
+It contains 2D FLAIR MRI slices from TCGA lower-grade glioma patients, each
+paired with a hand-annotated binary mask marking the tumor region. Every patient
+has a tumor; a tumor-negative slice is one where it is not visible.
 
 | Property | Value |
 | --- | --- |
-| Total scans | 3,929 |
+| Total slices | 3,929 |
 | Tumor-negative (`mask = 0`) | 2,556 |
 | Tumor-positive (`mask = 1`) | 1,373 |
 | Image size | 256 × 256 × 3 |
@@ -44,15 +48,18 @@ and store the `patient_id` and the binary `mask` flag.
 ### Stage 1 — ResNet50 classifier (detection)
 
 - **Backbone:** ResNet50 pre-trained on ImageNet, `include_top=False`.
-- **Transfer learning:** the convolutional backbone is frozen and only a small
-  custom head is trained:
+- **Transfer learning:** the design freezes the convolutional backbone and
+  trains only a small custom head:
   `AveragePooling2D → Flatten → Dense(256, relu) → Dropout(0.3) →
    Dense(256, relu) → Dropout(0.3) → Dense(2, softmax)`.
+  `models.py` does this; the notebook's freeze loop sets `layers.trainable`
+  (the Keras module) instead of `layer.trainable`, so it freezes nothing.
 - **Why ResNet:** residual "skip connections" let very deep networks train
   without the vanishing-gradient problem, which is why a 50-layer backbone
   transfers so well to a small medical dataset.
 - **Training:** `categorical_crossentropy`, Adam, `EarlyStopping` on validation
-  loss, `ModelCheckpoint` to keep the best weights.
+  loss, `ModelCheckpoint` to keep the best weights. In the notebook the `fit`
+  call is commented out; the evaluated weights came with the course.
 
 ### Stage 2 — ResUNet segmentation (localization)
 
@@ -84,7 +91,10 @@ the **Focal Tversky loss** (Abraham & Khan, 2018):
 
 ## 4. Results
 
-The classifier was evaluated on a held-out test set of 576 scans.
+These are the scores of the course's pre-trained weights (`weights.hdf5`,
+`weights_seg.hdf5`) on the notebook's test split, not of a model trained in
+this repo. The classifier was evaluated on 576 test slices (the split has 590;
+`steps = n // 16` drops the last 14).
 
 | Metric | Class 0 (no tumor) | Class 1 (tumor) |
 | --- | --- | --- |
@@ -92,17 +102,25 @@ The classifier was evaluated on a held-out test set of 576 scans.
 | Recall | 0.99 | 0.96 |
 | F1-score | 0.99 | 0.97 |
 
-- **Overall classification accuracy: 98.1%.**
-- The ResUNet produces tight, well-localized masks.
+- **Classification accuracy: 98.1%** (565 of 576; 3 false positives, 8 false
+  negatives). This is likely optimistic: the split is random over slices, not
+  patients, and the weights were trained on a split this repo can't see.
+- No segmentation metric (Dice or IoU) was computed; the masks below are a
+  qualitative check only.
 
 ![Sample segmentation results](../assets/segmentation_results.png)
 
-*For each scan (left to right): MRI · ground-truth mask · AI-predicted mask ·
-ground-truth overlay (red) · AI-predicted overlay (green). Full results are
+*For three test slices (left to right): MRI · ground-truth mask · predicted mask ·
+ground-truth overlay (red) · predicted overlay (green). Full results are
 rendered at the end of the notebook.*
 
 ## 5. Limitations & future work
 
+- **Weights not trained here.** The evaluated weights came with the course, and
+  `train.py` has no published results yet.
+- **Slice-level split.** Neighbouring slices of one patient can land in both
+  train and test; a patient-level split is the next experiment to run.
+- **No segmentation metric.** Localization quality is shown, not measured.
 - **Single dataset / modality.** Trained only on LGG FLAIR scans; generalization
   to other scanners, sequences, or tumor grades is unverified.
 - **No cross-validation of the reported numbers.** Metrics come from a single
